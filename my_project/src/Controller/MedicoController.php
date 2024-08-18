@@ -79,6 +79,12 @@ class MedicoController extends AbstractController
         if (!$medico) {
             return $this->json(['error' => 'Hospital não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
         }
+
+        $consultas = $medico->getConsultas();
+        if(count($consultas) > 0){
+            return $this->json(['error' => 'Médico possui consultas.'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+        
         $entityManager->remove($medico);
         $entityManager->flush();
         return $this->json(['message' => 'Médico removido com sucesso!']);

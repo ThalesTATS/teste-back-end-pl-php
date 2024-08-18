@@ -84,6 +84,7 @@ class HospitalController extends AbstractController
         if (!$hospital) {
             return $this->json(['error' => 'Hospital não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
         }
+        
         $entityManager->remove($hospital);
         $entityManager->flush();
         return $this->json(['message' => 'Hospital removido com sucesso!']);

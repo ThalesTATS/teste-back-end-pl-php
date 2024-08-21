@@ -28,6 +28,12 @@ class HospitalValidation extends RequestValidation
                 new Assert\NotBlank(['message' => 'O bairro do hospital é obrigatório.']),
                 new Assert\NotNull(['message' => 'O bairro do hospital é obrigatório.'])
             ],
+            'localidade' => [
+                
+            ],
+            'complemento' => [
+                
+            ],
         ];
     }
 }

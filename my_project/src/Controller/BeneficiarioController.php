@@ -9,7 +9,8 @@ use App\Repository\BeneficiarioRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Beneficiario;
 use Symfony\Component\HttpFoundation\Request;
-use App\Validations\BeneficiarioValidation;
+use App\Validations\Beneficiario\StoreValidation;
+use App\Validations\Beneficiario\UpdateValidation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Services\ResponseService;
 
@@ -40,8 +41,9 @@ class BeneficiarioController extends AbstractController
     }
 
     #[Route('/beneficiario/store', name: 'beneficiario.store', methods: ['POST'])]
-    public function store(Request $request, BeneficiarioValidation $beneficiarioValidation, ValidatorInterface $validator, EntityManagerInterface $entityManager): JsonResponse
+    public function store(Request $request, StoreValidation $beneficiarioValidation, ValidatorInterface $validator, EntityManagerInterface $entityManager): JsonResponse
     {
+        
         $errors = $beneficiarioValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
             return ResponseService::error('Request inválido.', JsonResponse::HTTP_BAD_REQUEST, $errors);
@@ -52,7 +54,7 @@ class BeneficiarioController extends AbstractController
     }
 
     #[Route('/beneficiario/{id}/update', name: 'beneficiario.update', methods: ['PUT'])]
-    public function update(int $id, Request $request, EntityManagerInterface $entityManager, BeneficiarioValidation $beneficiarioValidation, ValidatorInterface $validator): JsonResponse
+    public function update(int $id, Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
 
         $beneficiario = $entityManager->getRepository(Beneficiario::class)->find($id);
@@ -60,7 +62,8 @@ class BeneficiarioController extends AbstractController
             return ResponseService::error('Beneficiário não encontrado.', JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $errors = $beneficiarioValidation->validate($request->request->all(), $validator);
+        $updateValidation = new UpdateValidation($id, $entityManager);
+        $errors = $updateValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
             return ResponseService::error('Request inválido.', JsonResponse::HTTP_BAD_REQUEST, $errors);
         }

@@ -65,8 +65,7 @@ class HospitalController extends AbstractController
             return ResponseService::error('Request inválido.', JsonResponse::HTTP_BAD_REQUEST, $errors);
         }
 
-        $hospital->setNome($request->request->get('nome'));
-        $entityManager->flush();
+        $this->hospitalRepository->update($hospital, $request->request->all(), $entityManager);
         return ResponseService::success('Hospital atualizado com sucesso!');
     }
 

@@ -1,15 +1,19 @@
 <?php
 
-namespace App\Validations;
+namespace App\Validations\Beneficiario;
 
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Entity\Beneficiario;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Validations\RequestValidation;
 
-class BeneficiarioValidation extends RequestValidation
+class UpdateValidation extends RequestValidation
 {
-    public function __construct(EntityManagerInterface $entityManager){
+    private $id;
+
+    public function __construct(int $id, EntityManagerInterface $entityManager){
         $this->entityManager = $entityManager;
+        $this->id = $id;
         $this->rules = [
             'nome' => [
                 new Assert\NotBlank(['message' => 'O nome do beneficiário é obrigatório.']),
@@ -50,7 +54,14 @@ class BeneficiarioValidation extends RequestValidation
     }
 
     private function emailIsUnique(){
-        $beneficiario = $this->entityManager->getRepository(Beneficiario::class)->findOneBy(['email' => $this->values['email']]);
+        $beneficiario = $this->entityManager->getRepository(Beneficiario::class)
+            ->createQueryBuilder('b')
+            ->where('b.email = :email')
+            ->andWhere('b.id != :id')
+            ->setParameter('email', $this->values['email'])
+            ->setParameter('id', $this->id)
+            ->getQuery()
+            ->getOneOrNullResult();
         return !$beneficiario;
     }
 }

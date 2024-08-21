@@ -31,7 +31,6 @@ class HospitalRepository extends ServiceEntityRepository
 
     public function update($hospital, $values): void
     {
-        $hospital = new Hospital();
         $this->setValues($hospital, $values);
         $this->entityManager->flush();
     }

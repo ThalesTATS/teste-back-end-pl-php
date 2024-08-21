@@ -9,7 +9,7 @@ use App\Repository\BeneficiarioRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Beneficiario;
 use Symfony\Component\HttpFoundation\Request;
-use App\Requests\BeneficiarioRequest;
+use App\Validations\BeneficiarioValidation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class BeneficiarioController extends AbstractController
@@ -39,9 +39,9 @@ class BeneficiarioController extends AbstractController
     }
 
     #[Route('/beneficiario/store', name: 'beneficiario.store', methods: ['POST'])]
-    public function store(Request $request, BeneficiarioRequest $beneficiarioRequest, ValidatorInterface $validator, EntityManagerInterface $entityManager): JsonResponse
+    public function store(Request $request, BeneficiarioValidation $beneficiarioValidation, ValidatorInterface $validator, EntityManagerInterface $entityManager): JsonResponse
     {
-        $errors = $beneficiarioRequest->validate($request->request->all(), $validator);
+        $errors = $beneficiarioValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
             return new JsonResponse([
                 'status' => 'error',
@@ -55,7 +55,7 @@ class BeneficiarioController extends AbstractController
     }
 
     #[Route('/beneficiario/{id}/update', name: 'beneficiario.update', methods: ['PUT'])]
-    public function update(int $id, Request $request, EntityManagerInterface $entityManager, BeneficiarioRequest $beneficiarioRequest, ValidatorInterface $validator): JsonResponse
+    public function update(int $id, Request $request, EntityManagerInterface $entityManager, BeneficiarioValidation $beneficiarioValidation, ValidatorInterface $validator): JsonResponse
     {
 
         $beneficiario = $entityManager->getRepository(Beneficiario::class)->find($id);
@@ -63,7 +63,7 @@ class BeneficiarioController extends AbstractController
             return $this->json(['error' => 'Beneficiário não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $errors = $beneficiarioRequest->validate($request->request->all(), $validator);
+        $errors = $beneficiarioValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
             return new JsonResponse([
                 'status' => 'error',

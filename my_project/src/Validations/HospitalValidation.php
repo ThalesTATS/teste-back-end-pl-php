@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Requests;
+namespace App\Validations;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-class HospitalRequest extends RequestValidation
+class HospitalValidation extends RequestValidation
 {
     public function __construct(){
         $this->rules = [

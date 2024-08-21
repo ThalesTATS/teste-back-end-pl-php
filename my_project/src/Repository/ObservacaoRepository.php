@@ -14,25 +14,29 @@ class ObservacaoRepository extends ServiceEntityRepository
 {
 
     private ConsultaRepository $consultaRepository;
+    private AnexoRepository $anexoRepository;
 
-    public function __construct(ManagerRegistry $registry, ConsultaRepository $consultaRepository)
+    public function __construct(ManagerRegistry $registry, ConsultaRepository $consultaRepository, AnexoRepository $anexoRepository)
     {
         parent::__construct($registry, Observacao::class);
         $this->consultaRepository = $consultaRepository;
+        $this->anexoRepository = $anexoRepository;
     }
 
-    public function create($values, $entityManager): void
+    public function create($values, $entityManager): Observacao
     {
         $observacao = new Observacao();
         $this->setValues($observacao, $values, $entityManager);
         $entityManager->persist($observacao);
         $entityManager->flush();
+        return $observacao;
     }
 
-    public function update($observacao, $values, $entityManager): void
+    public function update($observacao, $values, $entityManager): Observacao
     {
         $this->setValues($observacao, $values, $entityManager);
         $entityManager->flush();
+        return $observacao;
     }
 
 
@@ -53,10 +57,12 @@ class ObservacaoRepository extends ServiceEntityRepository
 
     public function get($observacao){
         $consulta = $this->consultaRepository->get($observacao->getConsulta());
+        $anexo = $this->anexoRepository->getAll($observacao->getAnexos());
         return [
             'id' => $observacao->getId(),
-            'data' => $observacao->getDescricao(),
+            'descricao' => $observacao->getDescricao(),
             'consulta' => $consulta,
+            'anexo' => $anexo,
         ];
     }
 }

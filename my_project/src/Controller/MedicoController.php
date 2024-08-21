@@ -10,7 +10,7 @@ use App\Repository\MedicoRepository;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Medico;
-use App\Requests\MedicoRequest;
+use App\Validations\MedicoValidation;
 
 class MedicoController extends AbstractController
 {
@@ -38,9 +38,9 @@ class MedicoController extends AbstractController
     }
 
     #[Route('/medico/store', name: 'medico.store', methods: ['POST'])]
-    public function store(Request $request, MedicoRequest $medicoRequest, ValidatorInterface $validator, EntityManagerInterface $entityManager): JsonResponse
+    public function store(Request $request, MedicoValidation $medicoValidation, ValidatorInterface $validator, EntityManagerInterface $entityManager): JsonResponse
     {
-        $errors = $medicoRequest->validate($request->request->all(), $validator);
+        $errors = $medicoValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
             return new JsonResponse([
                 'status' => 'error',
@@ -54,7 +54,7 @@ class MedicoController extends AbstractController
     }
 
     #[Route('/medico/{id}/update', name: 'medico.update', methods: ['PUT'])]
-    public function update(int $id, Request $request, EntityManagerInterface $entityManager, MedicoRequest $medicoRequest, ValidatorInterface $validator): JsonResponse
+    public function update(int $id, Request $request, EntityManagerInterface $entityManager, MedicoValidation $medicoValidation, ValidatorInterface $validator): JsonResponse
     {
 
         $medico = $entityManager->getRepository(Medico::class)->find($id);
@@ -62,7 +62,7 @@ class MedicoController extends AbstractController
             return $this->json(['status' => 'error', 'error' => 'Médico não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $errors = $medicoRequest->validate($request->request->all(), $validator);
+        $errors = $medicoValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
             return new JsonResponse(['status' => 'error', 'errors' => $errors], JsonResponse::HTTP_BAD_REQUEST);
         }

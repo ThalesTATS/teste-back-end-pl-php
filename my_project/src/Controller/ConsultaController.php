@@ -10,7 +10,7 @@ use App\Repository\ConsultaRepository;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Consulta;
-use App\Requests\ConsultaRequest;
+use App\Validations\ConsultaValidation;
 
 class ConsultaController extends AbstractController
 {
@@ -38,9 +38,9 @@ class ConsultaController extends AbstractController
     }
 
     #[Route('/consulta/store', name: 'consulta.store', methods: ['POST'])]
-    public function store(Request $request, ConsultaRequest $consultaRequest, ValidatorInterface $validator, EntityManagerInterface $entityManager): JsonResponse
+    public function store(Request $request, ConsultaValidation $consultaValidation, ValidatorInterface $validator, EntityManagerInterface $entityManager): JsonResponse
     {
-        $errors = $consultaRequest->validate($request->request->all(), $validator);
+        $errors = $consultaValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
             return new JsonResponse([
                 'status' => 'error',
@@ -54,7 +54,7 @@ class ConsultaController extends AbstractController
     }
 
     #[Route('/consulta/{id}/update', name: 'consulta.update', methods: ['PUT'])]
-    public function update(int $id, Request $request, EntityManagerInterface $entityManager, ConsultaRequest $consultaRequest, ValidatorInterface $validator): JsonResponse
+    public function update(int $id, Request $request, EntityManagerInterface $entityManager, ConsultaValidation $consultaValidation, ValidatorInterface $validator): JsonResponse
     {
 
         $consulta = $entityManager->getRepository(Consulta::class)->find($id);
@@ -65,7 +65,7 @@ class ConsultaController extends AbstractController
             return $this->json(['status' => 'error', 'error' => 'Não é possiível alterar uma consulta concluída.'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $errors = $consultaRequest->validate($request->request->all(), $validator);
+        $errors = $consultaValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
             return new JsonResponse(['status' => 'error', 'errors' => $errors], JsonResponse::HTTP_BAD_REQUEST);
         }

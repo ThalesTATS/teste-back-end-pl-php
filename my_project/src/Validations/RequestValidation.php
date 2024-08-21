@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Requests;
+namespace App\Validations;
 
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -14,6 +14,7 @@ abstract class RequestValidation
 
     public function validate($values, ValidatorInterface $validator){
         $this->values = $values;
+        $this->values = array_merge($values, $this->prepareForValidation());
         $constraint = new Assert\Collection($this->rules);
         $errors = $validator->validate($values, $constraint);
         $errors = $this->getErrorsMessages($errors);
@@ -35,4 +36,6 @@ abstract class RequestValidation
     }
 
     public function withValidation(){return [];}
+
+    public function prepareForValidation(){return [];}
 }

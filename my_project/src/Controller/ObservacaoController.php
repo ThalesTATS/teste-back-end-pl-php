@@ -9,9 +9,13 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Observacao;
-use App\Requests\ObservacaoRequest;
 use App\Repository\ObservacaoRepository;
 use App\Entity\Consulta;
+use App\Entity\Anexo;
+use App\Validations\ObservacaoValidation;
+use App\Validations\AnexoValidation;
+use App\Services\AnexoService;
+use Symfony\Component\Validator\Constraints as Assert;
 
 class ObservacaoController extends AbstractController
 {
@@ -39,9 +43,14 @@ class ObservacaoController extends AbstractController
     }
 
     #[Route('/observacao/store', name: 'observacao.store', methods: ['POST'])]
-    public function store(Request $request, ObservacaoRequest $observacaoRequest, ValidatorInterface $validator, EntityManagerInterface $entityManager): JsonResponse
-    {
-        $errors = $observacaoRequest->validate($request->request->all(), $validator);
+    public function store(
+        Request $request, 
+        ObservacaoValidation $observacaoValidation, 
+        ValidatorInterface $validator, 
+        EntityManagerInterface $entityManager, 
+        AnexoValidation $anexoValidation
+    ){
+        $errors = $observacaoValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
             return new JsonResponse([
                 'status' => 'error',
@@ -49,13 +58,23 @@ class ObservacaoController extends AbstractController
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $this->observacaoRepository->create($request->request->all(), $entityManager);
+        $errors = $anexoValidation->validate(['anexo' => $request->files->get('anexo')], $validator);
+        if (count($errors) > 0) {
+            return new JsonResponse([
+                'status' => 'error',
+                'errors' => $errors,
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+
+        $observacao = $this->observacaoRepository->create($request->request->all(), $entityManager);
+        AnexoService::upload($request->files->get('anexo'), $observacao, $entityManager, $this->getParameter('uploads_directory'));
 
         return $this->json(['message' => 'Observação criada com sucesso!']);
     }
 
     #[Route('/observacao/{id}/update', name: 'observacao.update', methods: ['PUT'])]
-    public function update(int $id, Request $request, EntityManagerInterface $entityManager, ObservacaoRequest $observacaoRequest, ValidatorInterface $validator): JsonResponse
+    public function update(int $id, Request $request, EntityManagerInterface $entityManager, ObservacaoValidation $observacaoValidation, ValidatorInterface $validator): JsonResponse
     {
 
         $observacao = $entityManager->getRepository(Observacao::class)->find($id);
@@ -63,7 +82,7 @@ class ObservacaoController extends AbstractController
             return $this->json(['status' => 'error', 'error' => 'Observação não encontrada.'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $errors = $observacaoRequest->validate($request->request->all(), $validator);
+        $errors = $observacaoValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
             return new JsonResponse(['status' => 'error', 'errors' => $errors], JsonResponse::HTTP_BAD_REQUEST);
         }
@@ -86,8 +105,35 @@ class ObservacaoController extends AbstractController
             return $this->json(['status' => 'error', 'error' => 'A consulta já foi concluída.'], JsonResponse::HTTP_BAD_REQUEST);
         }
 
+        AnexoService::remove($observacao->getAnexo(), $entityManager, $this->getParameter('uploads_directory'));
         $entityManager->remove($observacao);
         $entityManager->flush();
         return $this->json(['message' => 'Observação removida com sucesso!']);
+    }
+
+    #[Route('/observacao/{id}/uploadAnexo', name: 'observacao.uploadAnexo', methods: ['POST'])]
+    public function uploadAnexo(int $id, EntityManagerInterface $entityManager, Request $request, ValidatorInterface $validator, AnexoValidation $anexoValidation): JsonResponse
+    {
+        $observacao = $entityManager->getRepository(Observacao::class)->find($id);
+        if (!$observacao) {
+            return $this->json(['error' => 'Observação não encontrada.'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $errors = $anexoValidation->validate(['anexo' => $request->files->get('anexo')], $validator);
+        if (count($errors) > 0) {
+            return new JsonResponse([
+                'status' => 'error',
+                'errors' => $errors,
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $consulta = $observacao->getConsulta();
+        if($consulta->isStatus()){
+            return $this->json(['status' => 'error', 'error' => 'A consulta já foi concluída.'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        AnexoService::upload($request->files->get('anexo'), $observacao, $entityManager, $this->getParameter('uploads_directory'));
+
+        return $this->json(['message' => 'Upload do anexo efetuado com sucesso!']);
     }
 }

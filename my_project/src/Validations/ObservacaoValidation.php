@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Requests;
+namespace App\Validations;
 
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Consulta;
 
-class ObservacaoRequest extends RequestValidation
+class ObservacaoValidation extends RequestValidation
 {
     public function __construct(EntityManagerInterface $entityManager){
         $this->entityManager = $entityManager;
@@ -29,9 +29,10 @@ class ObservacaoRequest extends RequestValidation
             $consulta = $this->entityManager->getRepository(Consulta::class)->find($this->values['consulta_id']);
             if(!$consulta){
                 $errors['consulta_id'][] = 'A consulta informada não existe.';
-            }
-            if($consulta->isStatus()){
-                $errors['consulta_id'][] = 'A consulta já foi concluída.';
+            } else {
+                if($consulta->isStatus()){
+                    $errors['consulta_id'][] = 'A consulta já foi concluída.';
+                }
             }
         }
 

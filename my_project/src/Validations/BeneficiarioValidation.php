@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Requests;
+namespace App\Validations;
 
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Entity\Beneficiario;
 use Doctrine\ORM\EntityManagerInterface;
 
-class BeneficiarioRequest extends RequestValidation
+class BeneficiarioValidation extends RequestValidation
 {
     public function __construct(EntityManagerInterface $entityManager){
         $this->entityManager = $entityManager;

@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Requests;
+namespace App\Validations;
 
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Hospital;
 
-class MedicoRequest extends RequestValidation
+class MedicoValidation extends RequestValidation
 {
     public function __construct(EntityManagerInterface $entityManager){
         $this->entityManager = $entityManager;

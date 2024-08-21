@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Requests;
+namespace App\Validations;
 
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\EntityManagerInterface;
@@ -8,7 +8,7 @@ use App\Entity\Hospital;
 use App\Entity\Beneficiario;
 use App\Entity\Medico;
 
-class ConsultaRequest extends RequestValidation
+class ConsultaValidation extends RequestValidation
 {
     public function __construct(EntityManagerInterface $entityManager){
         $this->entityManager = $entityManager;

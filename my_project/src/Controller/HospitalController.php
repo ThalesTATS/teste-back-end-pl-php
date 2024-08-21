@@ -9,7 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Hospital;
-use App\Requests\HospitalRequest;
+use App\Validations\HospitalValidation;
 use App\Repository\HospitalRepository;
 
 class HospitalController extends AbstractController
@@ -39,9 +39,9 @@ class HospitalController extends AbstractController
     }
 
     #[Route('/hospital/store', name: 'hospital.store', methods: ['POST'])]
-    public function store(Request $request, HospitalRequest $hospitalRequest, ValidatorInterface $validator): JsonResponse
+    public function store(Request $request, HospitalValidation $hospitalValidation, ValidatorInterface $validator): JsonResponse
     {
-        $errors = $hospitalRequest->validate($request->request->all(), $validator);
+        $errors = $hospitalValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
             return new JsonResponse([
                 'status' => 'error',
@@ -55,7 +55,7 @@ class HospitalController extends AbstractController
     }
 
     #[Route('/hospital/{id}/update', name: 'hospital.update', methods: ['PUT'])]
-    public function update(int $id, Request $request, EntityManagerInterface $entityManager, HospitalRequest $hospitalRequest, ValidatorInterface $validator): JsonResponse
+    public function update(int $id, Request $request, EntityManagerInterface $entityManager, HospitalValidation $hospitalValidation, ValidatorInterface $validator): JsonResponse
     {
 
         $hospital = $entityManager->getRepository(Hospital::class)->find($id);
@@ -63,7 +63,7 @@ class HospitalController extends AbstractController
             return $this->json(['error' => 'Hospital não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $errors = $hospitalRequest->validate($request->request->all(), $validator);
+        $errors = $hospitalValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
             return new JsonResponse([
                 'status' => 'error',

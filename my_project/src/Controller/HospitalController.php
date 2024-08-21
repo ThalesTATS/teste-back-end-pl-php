@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Hospital;
 use App\Validations\HospitalValidation;
 use App\Repository\HospitalRepository;
+use App\Services\ResponseService;
 
 class HospitalController extends AbstractController
 {
@@ -25,7 +26,7 @@ class HospitalController extends AbstractController
     public function index(EntityManagerInterface $entityManager): JsonResponse
     {
         $hospital = $entityManager->getRepository(Hospital::class)->findAll();
-        return $this->json(['data' => $this->hospitalRepository->getAll($hospital)]);
+        return ResponseService::data($this->hospitalRepository->getAll($hospital));
     }
 
     #[Route('/hospital/{id}/show', name: 'hospital.show', methods: ['GET'])]
@@ -33,9 +34,9 @@ class HospitalController extends AbstractController
     {
         $hospital = $entityManager->getRepository(Hospital::class)->find($id);
         if (!$hospital) {
-            return $this->json(['error' => 'Hospital não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Hospital não encontrado.', JsonResponse::HTTP_NOT_FOUND);
         }
-        return $this->json(['data' => $this->hospitalRepository->get($hospital)]);
+        return ResponseService::data($this->hospitalRepository->get($hospital));
     }
 
     #[Route('/hospital/store', name: 'hospital.store', methods: ['POST'])]
@@ -43,15 +44,11 @@ class HospitalController extends AbstractController
     {
         $errors = $hospitalValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
-            return new JsonResponse([
-                'status' => 'error',
-                'errors' => $errors,
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            return ResponseService::error('Request inválido.', JsonResponse::HTTP_BAD_REQUEST, $errors);
         }
 
         $this->hospitalRepository->create($request->request->all());
-
-        return $this->json(['message' => 'Hospital criado com sucesso!']);
+        return ResponseService::success('Hospital criado com sucesso!', JsonResponse::HTTP_CREATED);
     }
 
     #[Route('/hospital/{id}/update', name: 'hospital.update', methods: ['PUT'])]
@@ -65,16 +62,12 @@ class HospitalController extends AbstractController
 
         $errors = $hospitalValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
-            return new JsonResponse([
-                'status' => 'error',
-                'errors' => $errors,
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            return ResponseService::error('Request inválido.', JsonResponse::HTTP_BAD_REQUEST, $errors);
         }
 
         $hospital->setNome($request->request->get('nome'));
         $entityManager->flush();
-
-        return $this->json(['message' => 'Hospital atualizado com sucesso!']);
+        return ResponseService::success('Hospital atualizado com sucesso!');
     }
 
     #[Route('/hospital/{id}/destroy', name: 'hospital.destroy', methods: ['DELETE'])]
@@ -82,11 +75,16 @@ class HospitalController extends AbstractController
     {
         $hospital = $entityManager->getRepository(Hospital::class)->find($id);
         if (!$hospital) {
-            return $this->json(['error' => 'Hospital não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Hospital não encontrado.', JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $medicos = $hospital->getMedicos();
+        if(count($medicos) > 0){
+            return ResponseService::error('Hospital possui médicos.', JsonResponse::HTTP_BAD_REQUEST);
         }
         
         $entityManager->remove($hospital);
         $entityManager->flush();
-        return $this->json(['message' => 'Hospital removido com sucesso!']);
+        return ResponseService::success('Hospital removido com sucesso!');
     }
 }

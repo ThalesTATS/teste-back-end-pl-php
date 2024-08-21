@@ -11,6 +11,7 @@ use App\Entity\Beneficiario;
 use Symfony\Component\HttpFoundation\Request;
 use App\Validations\BeneficiarioValidation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Services\ResponseService;
 
 class BeneficiarioController extends AbstractController
 {
@@ -25,7 +26,7 @@ class BeneficiarioController extends AbstractController
     public function index(EntityManagerInterface $entityManager): JsonResponse
     {
         $beneficiario = $entityManager->getRepository(Beneficiario::class)->findAll();
-        return $this->json(['data' => $this->beneficiarioRepository->getAll($beneficiario)]);
+        return ResponseService::data($this->beneficiarioRepository->getAll($beneficiario));
     }
 
     #[Route('/beneficiario/{id}/show', name: 'beneficiario.show', methods: ['GET'])]
@@ -33,9 +34,9 @@ class BeneficiarioController extends AbstractController
     {
         $beneficiario = $entityManager->getRepository(Beneficiario::class)->find($id);
         if (!$beneficiario) {
-            return $this->json(['error' => 'Beneficiário não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Beneficiário não encontrado.', JsonResponse::HTTP_NOT_FOUND);
         }
-        return $this->json(['data' => $this->beneficiarioRepository->get($beneficiario)]);
+        return ResponseService::data($this->beneficiarioRepository->get($beneficiario));
     }
 
     #[Route('/beneficiario/store', name: 'beneficiario.store', methods: ['POST'])]
@@ -43,15 +44,11 @@ class BeneficiarioController extends AbstractController
     {
         $errors = $beneficiarioValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
-            return new JsonResponse([
-                'status' => 'error',
-                'errors' => $errors,
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            return ResponseService::error('Request inválido.', JsonResponse::HTTP_BAD_REQUEST, $errors);
         }
 
         $this->beneficiarioRepository->create($request->request->all(), $entityManager);
-
-        return $this->json(['message' => 'Beneficiário criado com sucesso!']);
+        return ResponseService::success('Beneficiário criado com sucesso!');
     }
 
     #[Route('/beneficiario/{id}/update', name: 'beneficiario.update', methods: ['PUT'])]
@@ -60,20 +57,16 @@ class BeneficiarioController extends AbstractController
 
         $beneficiario = $entityManager->getRepository(Beneficiario::class)->find($id);
         if (!$beneficiario) {
-            return $this->json(['error' => 'Beneficiário não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Beneficiário não encontrado.', JsonResponse::HTTP_NOT_FOUND);
         }
 
         $errors = $beneficiarioValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
-            return new JsonResponse([
-                'status' => 'error',
-                'errors' => $errors,
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            return ResponseService::error('Request inválido.', JsonResponse::HTTP_BAD_REQUEST, $errors);
         }
 
         $this->beneficiarioRepository->update($beneficiario, $request->request->all(), $entityManager);
-
-        return $this->json(['message' => 'Beneficiário atualizado com sucesso!']);
+        return ResponseService::success('Beneficiário atualizado com sucesso!');
     }
 
     #[Route('/beneficiario/{id}/destroy', name: 'beneficiario.destroy', methods: ['DELETE'])]
@@ -81,10 +74,11 @@ class BeneficiarioController extends AbstractController
     {
         $beneficiario = $entityManager->getRepository(Beneficiario::class)->find($id);
         if (!$beneficiario) {
-            return $this->json(['error' => 'Beneficiário não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Beneficiário não encontrado.', JsonResponse::HTTP_NOT_FOUND);
         }
+
         $entityManager->remove($beneficiario);
         $entityManager->flush();
-        return $this->json(['message' => 'Beneficiário removido com sucesso!']);
+        return ResponseService::success('Beneficiário removido com sucesso!');
     }
 }

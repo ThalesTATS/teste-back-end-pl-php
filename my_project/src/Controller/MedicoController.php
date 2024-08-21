@@ -11,6 +11,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Medico;
 use App\Validations\MedicoValidation;
+use App\Services\ResponseService;
 
 class MedicoController extends AbstractController
 {
@@ -24,7 +25,7 @@ class MedicoController extends AbstractController
     public function index(EntityManagerInterface $entityManager): JsonResponse
     {
         $medico = $entityManager->getRepository(Medico::class)->findAll();
-        return $this->json(['data' => $this->medicoRepository->getAll($medico)]);
+        return ResponseService::data($this->medicoRepository->getAll($medico));
     }
 
     #[Route('/medico/{id}/show', name: 'medico.show', methods: ['GET'])]
@@ -32,9 +33,9 @@ class MedicoController extends AbstractController
     {
         $medico = $entityManager->getRepository(Medico::class)->find($id);
         if (!$medico) {
-            return $this->json(['error' => 'Médico não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Médico não encontrado.', JsonResponse::HTTP_NOT_FOUND);
         }
-        return $this->json(['data' => $this->medicoRepository->get($medico)]);
+        return ResponseService::data($this->medicoRepository->get($medico));
     }
 
     #[Route('/medico/store', name: 'medico.store', methods: ['POST'])]
@@ -42,15 +43,11 @@ class MedicoController extends AbstractController
     {
         $errors = $medicoValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
-            return new JsonResponse([
-                'status' => 'error',
-                'errors' => $errors,
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            return ResponseService::error('Request inválido.', JsonResponse::HTTP_BAD_REQUEST, $errors);
         }
 
         $this->medicoRepository->create($request->request->all(), $entityManager);
-
-        return $this->json(['message' => 'Médico criado com sucesso!']);
+        return ResponseService::success('Médico criado com sucesso!');
     }
 
     #[Route('/medico/{id}/update', name: 'medico.update', methods: ['PUT'])]
@@ -59,17 +56,16 @@ class MedicoController extends AbstractController
 
         $medico = $entityManager->getRepository(Medico::class)->find($id);
         if (!$medico) {
-            return $this->json(['status' => 'error', 'error' => 'Médico não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Médico não encontrado.', JsonResponse::HTTP_NOT_FOUND);
         }
 
         $errors = $medicoValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
-            return new JsonResponse(['status' => 'error', 'errors' => $errors], JsonResponse::HTTP_BAD_REQUEST);
+            return ResponseService::error('Request inválido.', JsonResponse::HTTP_BAD_REQUEST, $errors);
         }
 
         $this->medicoRepository->update($medico, $request->request->all(), $entityManager);
-
-        return $this->json(['message' => 'Médico atualizado com sucesso!']);
+        return ResponseService::success('Médico atualizado com sucesso!');
     }
 
     #[Route('/medico/{id}/destroy', name: 'medico.destroy', methods: ['DELETE'])]
@@ -77,16 +73,16 @@ class MedicoController extends AbstractController
     {
         $medico = $entityManager->getRepository(Medico::class)->find($id);
         if (!$medico) {
-            return $this->json(['error' => 'Hospital não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Médico não encontrado.', JsonResponse::HTTP_NOT_FOUND);
         }
 
         $consultas = $medico->getConsultas();
         if(count($consultas) > 0){
-            return $this->json(['error' => 'Médico possui consultas.'], JsonResponse::HTTP_BAD_REQUEST);
+            return ResponseService::error('Médico possui consultas.', JsonResponse::HTTP_BAD_REQUEST);
         }
         
         $entityManager->remove($medico);
         $entityManager->flush();
-        return $this->json(['message' => 'Médico removido com sucesso!']);
+        return ResponseService::success('Médico removido com sucesso!');
     }
 }

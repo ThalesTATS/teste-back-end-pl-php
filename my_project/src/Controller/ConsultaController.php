@@ -11,6 +11,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Consulta;
 use App\Validations\ConsultaValidation;
+use App\Services\ResponseService;
 
 class ConsultaController extends AbstractController
 {
@@ -24,7 +25,7 @@ class ConsultaController extends AbstractController
     public function index(EntityManagerInterface $entityManager): JsonResponse
     {
         $consulta = $entityManager->getRepository(Consulta::class)->findAll();
-        return $this->json(['data' => $this->consultaRepository->getAll($consulta)]);
+        return ResponseService::data($this->consultaRepository->getAll($consulta));
     }
 
     #[Route('/consulta/{id}/show', name: 'consulta.show', methods: ['GET'])]
@@ -32,9 +33,9 @@ class ConsultaController extends AbstractController
     {
         $consulta = $entityManager->getRepository(Consulta::class)->find($id);
         if (!$consulta) {
-            return $this->json(['error' => 'Consulta não encontrada.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Consulta não encontrada.', JsonResponse::HTTP_NOT_FOUND);
         }
-        return $this->json(['data' => $this->consultaRepository->get($consulta)]);
+        return ResponseService::data($this->consultaRepository->get($consulta));
     }
 
     #[Route('/consulta/store', name: 'consulta.store', methods: ['POST'])]
@@ -42,15 +43,11 @@ class ConsultaController extends AbstractController
     {
         $errors = $consultaValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
-            return new JsonResponse([
-                'status' => 'error',
-                'errors' => $errors,
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            return ResponseService::error('Request inválido.', JsonResponse::HTTP_BAD_REQUEST, $errors);
         }
 
         $this->consultaRepository->create($request->request->all(), $entityManager);
-
-        return $this->json(['message' => 'Consulta criada com sucesso!']);
+        return ResponseService::success('Consulta criada com sucesso!');
     }
 
     #[Route('/consulta/{id}/update', name: 'consulta.update', methods: ['PUT'])]
@@ -59,20 +56,19 @@ class ConsultaController extends AbstractController
 
         $consulta = $entityManager->getRepository(Consulta::class)->find($id);
         if (!$consulta) {
-            return $this->json(['status' => 'error', 'error' => 'Consulta não encontrada.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Consulta não encontrada.', JsonResponse::HTTP_NOT_FOUND);
         }
         if($consulta->isStatus()){
-            return $this->json(['status' => 'error', 'error' => 'Não é possiível alterar uma consulta concluída.'], JsonResponse::HTTP_BAD_REQUEST);
+            return ResponseService::error('Não é possível alterar uma consulta concluída.', JsonResponse::HTTP_BAD_REQUEST);
         }
 
         $errors = $consultaValidation->validate($request->request->all(), $validator);
         if (count($errors) > 0) {
-            return new JsonResponse(['status' => 'error', 'errors' => $errors], JsonResponse::HTTP_BAD_REQUEST);
+            return ResponseService::error('Request inválido.', JsonResponse::HTTP_BAD_REQUEST, $errors);
         }
 
         $this->consultaRepository->update($consulta, $request->request->all(), $entityManager);
-
-        return $this->json(['message' => 'Consulta atualizada com sucesso!']);
+        return ResponseService::success('Consulta atualizada com sucesso!');
     }
 
     #[Route('/consulta/{id}/destroy', name: 'consulta.destroy', methods: ['DELETE'])]
@@ -80,15 +76,15 @@ class ConsultaController extends AbstractController
     {
         $consulta = $entityManager->getRepository(Consulta::class)->find($id);
         if (!$consulta) {
-            return $this->json(['error' => 'Consulta não encontrada.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Consulta não encontrada.', JsonResponse::HTTP_NOT_FOUND);
         }
         if($consulta->isStatus()){
-            return $this->json(['status' => 'error', 'error' => 'Não é possiível alterar uma consulta concluída.'], JsonResponse::HTTP_BAD_REQUEST);
+            return ResponseService::error('Não é possível alterar uma consulta concluída.', JsonResponse::HTTP_BAD_REQUEST);
         }
 
         $entityManager->remove($consulta);
         $entityManager->flush();
-        return $this->json(['message' => 'Consulta removida com sucesso!']);
+        return ResponseService::success('Consulta removida com sucesso!');
     }
 
     #[Route('/consulta/{id}/concluir', name: 'consulta.concluir', methods: ['PATCH'])]
@@ -96,13 +92,13 @@ class ConsultaController extends AbstractController
     {
         $consulta = $entityManager->getRepository(Consulta::class)->find($id);
         if (!$consulta) {
-            return $this->json(['error' => 'Consulta não encontrada.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Consulta não encontrada.', JsonResponse::HTTP_NOT_FOUND);
         }
         if($consulta->isStatus()){
-            return $this->json(['status' => 'error', 'error' => 'A consulta já foi concluída.'], JsonResponse::HTTP_BAD_REQUEST);
+            return ResponseService::error('Não é possível alterar uma consulta concluída.', JsonResponse::HTTP_BAD_REQUEST);
         }
         $consulta->setStatus(true);
         $entityManager->flush();
-        return $this->json(['message' => 'Consulta concluída com sucesso!']);
+        return ResponseService::success('Consulta concluída com sucesso!');
     }
 }

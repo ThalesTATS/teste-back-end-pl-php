@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Anexo;
 use App\Services\AnexoService;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use App\Services\ResponseService;
 
 class AnexoController extends AbstractController
 {
@@ -17,13 +18,11 @@ class AnexoController extends AbstractController
     public function show(int $id, EntityManagerInterface $entityManager)
     {
         $anexo = $entityManager->getRepository(Anexo::class)->find($id);
-
         if (!$anexo) {
-            throw $this->createNotFoundException('Anexo não encontrado');
+            return ResponseService::error('Anexo não encontrado.', JsonResponse::HTTP_NOT_FOUND);
         }
 
         $filePath = $this->getParameter('uploads_directory') . $anexo->getUrl();
-
         return new BinaryFileResponse($filePath);
     }
 
@@ -33,21 +32,21 @@ class AnexoController extends AbstractController
 
         $anexo = $entityManager->getRepository(Anexo::class)->find($id);
         if (!$anexo) {
-            return $this->json(['error' => 'Anexo não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Anexo não encontrado.', JsonResponse::HTTP_NOT_FOUND);
         }
 
         $observacao = $anexo->getObservacao();
         if (!$observacao) {
-            return $this->json(['error' => 'Observação não encontrada.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Observação não encontrada.', JsonResponse::HTTP_NOT_FOUND);
         }
         
         $consulta = $observacao->getConsulta();
         if($consulta->isStatus()){
-            return $this->json(['status' => 'error', 'error' => 'A consulta já foi concluída.'], JsonResponse::HTTP_BAD_REQUEST);
+            return ResponseService::error('A consulta já foi concluída.', JsonResponse::HTTP_BAD_REQUEST);
         }
 
         AnexoService::remove($anexo, $entityManager, $this->getParameter('uploads_directory'));
-        return $this->json(['message' => 'Anexo removido com sucesso!']);
+        return ResponseService::success('Anexo removido com sucesso.');
     }
 }
 

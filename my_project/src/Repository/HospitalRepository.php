@@ -33,7 +33,6 @@ class HospitalRepository extends ServiceEntityRepository
     {
         $hospital = new Hospital();
         $this->setValues($hospital, $values);
-        $this->entityManager->persist($hospital);
         $this->entityManager->flush();
     }
 

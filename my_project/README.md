@@ -22,5 +22,10 @@ php bin/console doctrine:database:create
 php bin/console doctrine:migrations:migrate
 ```
 
+- Run Sever
+```env
+symfony server:start
+```
+
 ## Documentação
 https://documenter.getpostman.com/view/7645465/2sA3sAi85W#da83a8d7-3f9c-4143-a572-1df4fc834ef0

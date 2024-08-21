@@ -13,13 +13,11 @@ use Doctrine\Persistence\ManagerRegistry;
 class ObservacaoRepository extends ServiceEntityRepository
 {
 
-    private ConsultaRepository $consultaRepository;
     private AnexoRepository $anexoRepository;
 
-    public function __construct(ManagerRegistry $registry, ConsultaRepository $consultaRepository, AnexoRepository $anexoRepository)
+    public function __construct(ManagerRegistry $registry, AnexoRepository $anexoRepository)
     {
         parent::__construct($registry, Observacao::class);
-        $this->consultaRepository = $consultaRepository;
         $this->anexoRepository = $anexoRepository;
     }
 
@@ -56,12 +54,10 @@ class ObservacaoRepository extends ServiceEntityRepository
     }
 
     public function get($observacao){
-        $consulta = $this->consultaRepository->get($observacao->getConsulta());
         $anexo = $this->anexoRepository->getAll($observacao->getAnexos());
         return [
             'id' => $observacao->getId(),
             'descricao' => $observacao->getDescricao(),
-            'consulta' => $consulta,
             'anexo' => $anexo,
         ];
     }

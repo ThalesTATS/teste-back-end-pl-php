@@ -19,13 +19,20 @@ class ConsultaRepository extends ServiceEntityRepository
     private $hospitalRepository;
     private $medicoRepository;
     private $beneficiarioRepository;
+    private $observacaoRepository;
 
-    public function __construct(ManagerRegistry $registry, HospitalRepository $hospitalRepository, MedicoRepository $medicoRepository, BeneficiarioRepository $beneficiarioRepository)
-    {
+    public function __construct(
+        ManagerRegistry $registry, 
+        HospitalRepository $hospitalRepository, 
+        MedicoRepository $medicoRepository, 
+        BeneficiarioRepository $beneficiarioRepository,
+        ObservacaoRepository $observacaoRepository
+    ){
         parent::__construct($registry, Consulta::class);
         $this->hospitalRepository = $hospitalRepository;
         $this->medicoRepository = $medicoRepository;
         $this->beneficiarioRepository = $beneficiarioRepository;
+        $this->observacaoRepository = $observacaoRepository;
     }
 
     public function create($values, $entityManager): void
@@ -69,13 +76,15 @@ class ConsultaRepository extends ServiceEntityRepository
         $hospital = $this->hospitalRepository->get($consulta->getHospital());
         $beneficiario = $this->beneficiarioRepository->get($consulta->getBeneficiario());
         $medico = $this->medicoRepository->get($consulta->getMedico());
+        $observacoes = $this->observacaoRepository->getAll($consulta->getObservacaos());
         return [
             'id' => $consulta->getId(),
             'data' => $consulta->getData(),
             'status' => $consulta->isStatus(),
             'hospital' => $hospital,
             'beneficiario' => $beneficiario,
-            'medico' => $medico
+            'medico' => $medico,
+            'observacoes' => $observacoes
         ];
     }
 }

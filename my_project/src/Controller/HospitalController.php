@@ -57,7 +57,7 @@ class HospitalController extends AbstractController
 
         $hospital = $entityManager->getRepository(Hospital::class)->find($id);
         if (!$hospital) {
-            return $this->json(['error' => 'Hospital não encontrado.'], JsonResponse::HTTP_NOT_FOUND);
+            return ResponseService::error('Hospital não encontrado.', JsonResponse::HTTP_NOT_FOUND);
         }
 
         $errors = $hospitalValidation->validate($request->request->all(), $validator);

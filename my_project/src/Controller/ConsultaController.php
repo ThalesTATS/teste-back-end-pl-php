@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Consulta;
 use App\Validations\ConsultaValidation;
 use App\Services\ResponseService;
+use App\Services\AnexoService;
 
 class ConsultaController extends AbstractController
 {
@@ -80,6 +81,14 @@ class ConsultaController extends AbstractController
         }
         if($consulta->isStatus()){
             return ResponseService::error('Não é possível alterar uma consulta concluída.', JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $observacoes = $consulta->getObservacaos();
+        foreach ($observacoes as $observacao) {
+            $anexos = $observacao->getAnexos();
+            foreach ($anexos as $anexo) {
+                AnexoService::remove($anexo, $entityManager, $this->getParameter('uploads_directory'));
+            }
         }
 
         $entityManager->remove($consulta);

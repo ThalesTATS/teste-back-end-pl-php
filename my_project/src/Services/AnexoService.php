@@ -20,8 +20,8 @@ class AnexoService
             $entityManager->flush();
 
             $anexo = $observacao->getAnexos()->last();
-            $anexo->setUrl('/'.$observacao->getId().'/'.$anexo->getId().'.'.$anexo->getExtensao());
-            $file->move($uploads_directory.'/'.$observacao->getId().'/', $anexo->getId().'.'.$anexo->getExtensao());
+            $anexo->setUrl('/'.$anexo->getId().'.'.$anexo->getExtensao());
+            $file->move($uploads_directory.'/', $anexo->getId().'.'.$anexo->getExtensao());
             $entityManager->flush();
             return true;
         } catch (IOExceptionInterface $exception) {

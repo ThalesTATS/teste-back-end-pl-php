@@ -90,12 +90,16 @@ class ObservacaoController extends AbstractController
             return ResponseService::error('Observação não encontrada.', JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $consulta = $entityManager->getRepository(Consulta::class)->find($id);
+        $consulta = $observacao->getConsulta();
         if($consulta->isStatus()){
             return ResponseService::error('A consulta já foi concluída.', JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        AnexoService::remove($observacao->getAnexo(), $entityManager, $this->getParameter('uploads_directory'));
+        $anexos = $observacao->getAnexos();
+        foreach ($anexos as $anexo) {
+            AnexoService::remove($anexo, $entityManager, $this->getParameter('uploads_directory'));
+        }
+
         $entityManager->remove($observacao);
         $entityManager->flush();
         return ResponseService::success('Observação removida com sucesso!');
